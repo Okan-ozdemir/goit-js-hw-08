@@ -109,3 +109,9 @@ gallery.addEventListener("click",event=>{
   console.log(event.target);
   console.log(event.target.getAttribute("data-source"));
 })
+galleryLink.addEventListener('click', event => {
+  event.preventDefault(); // Resim indirme işlemi durduruldu !!!!
+  modalOriginal.show();
+});
+
+
