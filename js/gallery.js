@@ -64,54 +64,57 @@ const images = [
   },
 ];
 
+const galleryContainer = document.querySelector(".gallery");
 
-const gallery =document.querySelector(".gallery")
-
-images.forEach(image =>{
-
-const li=document.createElement("li")
-li.classList.add("gallery-item")
-
-
-const img =document.createElement("img")
-img.classList.add("gallery-image")
-img.src=image.preview;
-img.setAttribute("data-source",image.original)
-img.alt=image.description;
-
-
-const a =document.createElement("a")
-a.classList.add("gallery-link")
-
-
-const instance = basicLightbox.create(`
-  <div class="modal">
-      <img src="${image.original}" alt="${image.description}">      
-  </div>
-`)
-
-a.addEventListener("click",event=>{
-  instance.show();
-})
-
-
-document.addEventListener("keydown",event=>{
-  console.log(event.code);
-  if(event.code ==="Escape"){
-instance.close();
-  }
-})
-a.appendChild(img);
-li.appendChild(a);
-gallery.appendChild(li);
-})
-gallery.addEventListener("click",event=>{
-  console.log(event.target);
-  console.log(event.target.getAttribute("data-source"));
-})
-galleryLink.addEventListener('click', event => {
-  event.preventDefault(); // Resim indirme işlemi durduruldu !!!!
-  modalOriginal.show();
+// Tüm galeri öğelerini bir diziye ekleyelim.
+const galleryItemsHTML = images.map(image => {
+  // Her öğe için lightbox HTML'sini oluşturmamız gerekmiyor çünkü 
+  // lightbox instance'larını dinamik olarak oluşturacağız. 
+  // Burada yalnızca temel galeri öğesini oluşturuyoruz.
+  return `
+    <li class="gallery-item">
+      <a class="gallery-link" href="${image.original}">
+        <img 
+          class="gallery-image" 
+          src="${image.preview}" 
+          data-source="${image.original}" 
+          alt="${image.description}">
+      </a>
+    </li>
+  `;
 });
 
+// Tüm HTML parçalarını tek bir string'e birleştiriyoruz.
+galleryContainer.innerHTML = galleryItemsHTML.join("");
 
+// Galeri konteynerine eklenen öğeler üzerinde olay dinleyicilerini tek seferde kurabiliriz.
+galleryContainer.addEventListener("click", event => {
+  event.preventDefault(); // Varsayılan bağlantı davranışını engelle
+
+  // Tıklanan elementin img olup olmadığını kontrol et
+  if (event.target.nodeName !== "IMG") {
+    return;
+  }
+
+  // Tıklanan resmin orijinal kaynağını al
+  const originalImage = event.target.getAttribute("data-source");
+
+  // lightbox instance oluştur
+  const instance = basicLightbox.create(`
+    <div class="modal">
+      <img src="${originalImage}" alt="${event.target.alt}">
+    </div>
+  `);
+
+  instance.show();
+
+  // Escape tuşu ile lightbox'ı kapatmak için
+  const onEscKeyPress = e => {
+    if (e.code === "Escape") {
+      instance.close();
+      document.removeEventListener("keydown", onEscKeyPress);
+    }
+  };
+
+  document.addEventListener("keydown", onEscKeyPress);
+});
