@@ -64,57 +64,32 @@ const images = [
   },
 ];
 
-const galleryContainer = document.querySelector(".gallery");
+const gallery = document.querySelector(".gallery");
+gallery.insertAdjacentHTML("beforeend", createMarkup(images));
+gallery.addEventListener("click", openLargeImage);
 
-// Tüm galeri öğelerini bir diziye ekleyelim.
-const galleryItemsHTML = images.map(image => {
-  // Her öğe için lightbox HTML'sini oluşturmamız gerekmiyor çünkü 
-  // lightbox instance'larını dinamik olarak oluşturacağız. 
-  // Burada yalnızca temel galeri öğesini oluşturuyoruz.
-  return `
+function createMarkup(array) {
+  return array
+    .map(
+      (image) => `
     <li class="gallery-item">
-      <a class="gallery-link" href="${image.original}">
-        <img 
-          class="gallery-image" 
-          src="${image.preview}" 
-          data-source="${image.original}" 
-          alt="${image.description}">
-      </a>
+    <a class="gallery-link" href="${image.original}">
+       <img src="${image.preview}" alt="${image.description}" class="gallery-image" data-source="${image.original}">
+    </a>
     </li>
-  `;
-});
+  `
+    )
+    .join("");
+}
 
-// Tüm HTML parçalarını tek bir string'e birleştiriyoruz.
-galleryContainer.innerHTML = galleryItemsHTML.join("");
-
-// Galeri konteynerine eklenen öğeler üzerinde olay dinleyicilerini tek seferde kurabiliriz.
-galleryContainer.addEventListener("click", event => {
-  event.preventDefault(); // Varsayılan bağlantı davranışını engelle
-
-  // Tıklanan elementin img olup olmadığını kontrol et
-  if (event.target.nodeName !== "IMG") {
+function openLargeImage(event) {
+  event.preventDefault();
+  if (event.target === event.currentTarget) {
     return;
   }
 
-  // Tıklanan resmin orijinal kaynağını al
-  const originalImage = event.target.getAttribute("data-source");
-
-  // lightbox instance oluştur
-  const instance = basicLightbox.create(`
-    <div class="modal">
-      <img src="${originalImage}" alt="${event.target.alt}">
-    </div>
-  `);
-
+  const instance = basicLightbox.create(
+    `<img src="${event.target.dataset.source}" width="800" height="600">`
+  );
   instance.show();
-
-  // Escape tuşu ile lightbox'ı kapatmak için
-  const onEscKeyPress = e => {
-    if (e.code === "Escape") {
-      instance.close();
-      document.removeEventListener("keydown", onEscKeyPress);
-    }
-  };
-
-  document.addEventListener("keydown", onEscKeyPress);
-});
+}
